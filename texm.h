@@ -23,6 +23,7 @@ public:
 
     QString current_selected_filename();
     void update_file_table();
+    void update_big_pixmap();
     void append_file_info_list(const QList<QFileInfo> &info_list);
     void append_file_info_recursive(const QFileInfo &, const int);
 
@@ -43,6 +44,7 @@ private:
     QImage m_small_png_image;
     QString m_big_png_filename;
     QImage m_big_png_image;
+    QPixmap m_big_pixmap;
 
 private slots:
     void menu_open_pushed();

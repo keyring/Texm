@@ -14,11 +14,15 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         texm.cpp \
-    basicimageview.cpp
+    basicimageview.cpp \
+    rect.cpp \
+    max_rects_pack.cpp
 
 HEADERS  += texm.h \
     texm_util.h \
-    basicimageview.h
+    basicimageview.h \
+    rect.h \
+    max_rects_pack.h
 
 FORMS    += texm.ui
 

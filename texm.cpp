@@ -89,7 +89,13 @@ QString Texm::current_selected_filename()
     return name_item ? name_item->text() : QString();
 }
 
+void Texm::update_big_pixmap()
+{
+    m_big_pixmap = QPixmap(2048, 2048);
+    foreach (const QFileInfo &file_info, m_file_list) {
 
+    }
+}
 
 void Texm::update_file_table()
 {
@@ -112,6 +118,7 @@ void Texm::update_file_table()
         if(last_selected_filename == file_info.fileName()){
             table_widget->setCurrentItem(filename_item);
         }
+
         ++row_index;
     }
 
