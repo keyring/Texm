@@ -13,9 +13,14 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        texm.cpp
+        texm.cpp \
+    basicimageview.cpp
 
 HEADERS  += texm.h \
-    texm_util.h
+    texm_util.h \
+    basicimageview.h
 
 FORMS    += texm.ui
+
+RESOURCES += \
+    resource/resource.qrc

@@ -29,8 +29,23 @@
    <layout class="QHBoxLayout" name="horizontalLayout_3">
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <property name="spacing">
+       <number>0</number>
+      </property>
       <item>
        <widget class="QScrollArea" name="fileListScrollArea">
+        <property name="maximumSize">
+         <size>
+          <width>300</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::NoFrame</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Plain</enum>
+        </property>
         <property name="widgetResizable">
          <bool>true</bool>
         </property>
@@ -39,11 +54,14 @@
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>256</width>
-           <height>383</height>
+           <width>260</width>
+           <height>385</height>
           </rect>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_5">
+          <property name="spacing">
+           <number>1</number>
+          </property>
           <property name="leftMargin">
            <number>0</number>
           </property>
@@ -57,7 +75,27 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="QTableWidget" name="tableWidget_fileList"/>
+           <widget class="QTableWidget" name="tableWidget_fileList">
+            <property name="editTriggers">
+             <set>QAbstractItemView::NoEditTriggers</set>
+            </property>
+            <property name="selectionBehavior">
+             <enum>QAbstractItemView::SelectRows</enum>
+            </property>
+            <property name="showGrid">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="BasicImageView" name="smallImagePreview">
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>300</height>
+             </size>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -65,6 +103,12 @@
       </item>
       <item>
        <widget class="QScrollArea" name="imageViewScrollArea">
+        <property name="frameShape">
+         <enum>QFrame::NoFrame</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Plain</enum>
+        </property>
         <property name="widgetResizable">
          <bool>true</bool>
         </property>
@@ -73,14 +117,54 @@
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>256</width>
-           <height>383</height>
+           <width>260</width>
+           <height>385</height>
           </rect>
          </property>
          <layout class="QGridLayout" name="gridLayout_2">
           <property name="leftMargin">
+           <number>1</number>
+          </property>
+          <property name="topMargin">
            <number>0</number>
           </property>
+          <property name="rightMargin">
+           <number>1</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <property name="horizontalSpacing">
+           <number>6</number>
+          </property>
+          <item row="0" column="0">
+           <widget class="BasicImageView" name="bigImagePreview"/>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+      </item>
+      <item>
+       <widget class="QScrollArea" name="configScrollArea">
+        <property name="maximumSize">
+         <size>
+          <width>300</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="widgetResizable">
+         <bool>true</bool>
+        </property>
+        <widget class="QWidget" name="scrollAreaWidgetContents">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>0</y>
+           <width>258</width>
+           <height>383</height>
+          </rect>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_3">
           <property name="topMargin">
            <number>0</number>
           </property>
@@ -90,31 +174,6 @@
           <property name="bottomMargin">
            <number>0</number>
           </property>
-          <property name="horizontalSpacing">
-           <number>6</number>
-          </property>
-          <item row="0" column="0">
-           <widget class="QGraphicsView" name="graphicsView"/>
-          </item>
-         </layout>
-        </widget>
-       </widget>
-      </item>
-      <item>
-       <widget class="QScrollArea" name="configScrollArea">
-        <property name="widgetResizable">
-         <bool>true</bool>
-        </property>
-        <widget class="QWidget" name="scrollAreaWidgetContents">
-         <property name="geometry">
-          <rect>
-           <x>0</x>
-           <y>0</y>
-           <width>250</width>
-           <height>383</height>
-          </rect>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout_3">
           <item>
            <widget class="QGroupBox" name="groupBox">
             <property name="title">
@@ -192,6 +251,13 @@
    </property>
   </action>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>BasicImageView</class>
+   <extends>QGraphicsView</extends>
+   <header>basicimageview.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

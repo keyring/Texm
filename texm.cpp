@@ -30,7 +30,8 @@
 
 Texm::Texm(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::Texm)
+    ui(new Ui::Texm),
+    m_selected_last_row(-1)
 {
     ui->setupUi(this);
 
@@ -41,11 +42,27 @@ Texm::Texm(QWidget *parent) :
      table_widget->setHorizontalHeaderItem(1, new QTableWidgetItem(tr("Size")));
     }
 
+    { // init small image view
+      QPalette p = ui->smallImagePreview->palette();
+      p.setBrush( QPalette::Base, QBrush(QColor("white")) );
+      ui->smallImagePreview->setPalette( p );
+      ui->smallImagePreview->setBackgroundBrush( QBrush( QPixmap(":background/checkerboard.png") ) );
+    }
+
+    { // init big image view
+      QPalette p = ui->bigImagePreview->palette();
+      p.setBrush( QPalette::Base, QBrush(QColor(50,50,50)) );
+      ui->bigImagePreview->setPalette( p );
+      ui->bigImagePreview->setBackgroundBrush( QBrush( QPixmap(":background/checkerboard.png") ) );
+    }
 
     ////
     connect(ui->actionOpen, SIGNAL(triggered()), this, SLOT(menu_open_pushed()));
     connect(ui->actionExit, SIGNAL(triggered()), this, SLOT(menu_exit_pushed()));
     connect(ui->actionPublish, SIGNAL(triggered()), this, SLOT(menu_publish_pushed()));
+
+    table_widget_current_changed();
+
 }
 
 Texm::~Texm()
@@ -58,6 +75,12 @@ QTableWidget * Texm::file_list_table_widget()
     return ui->tableWidget_fileList;
 }
 
+void Texm::file_list_clear()
+{
+    m_file_list.clear();
+    update_file_table();
+}
+
 QString Texm::current_selected_filename()
 {
     QTableWidget * const table_widget = file_list_table_widget();
@@ -66,10 +89,7 @@ QString Texm::current_selected_filename()
     return name_item ? name_item->text() : QString();
 }
 
-void Texm::table_widget_current_changed()
-{
-    // 点击即可预览该图片
-}
+
 
 void Texm::update_file_table()
 {
@@ -80,17 +100,17 @@ void Texm::update_file_table()
 
     int row_index = 0;
     foreach (const QFileInfo &file_info, m_file_list) {
-        QTableWidgetItem *const basename_item = new QTableWidgetItem(file_info.completeBaseName());
-        basename_item->setToolTip(file_info.completeBaseName());
-        table_widget->setItem(row_index, 0, basename_item);
+        QTableWidgetItem *const filename_item = new QTableWidgetItem(file_info.fileName());
+        filename_item->setToolTip(file_info.fileName());
+        table_widget->setItem(row_index, 0, filename_item);
 
         QTableWidgetItem *const origin_size_item =
             new QTableWidgetItem(TexmUtil::size_to_string_kb( file_info.size() ));
         origin_size_item->setData(1, static_cast<double>(file_info.size()) );
         table_widget->setItem( row_index, 1, origin_size_item );
 
-        if(last_selected_filename == file_info.completeBaseName()){
-            table_widget->setCurrentItem(basename_item);
+        if(last_selected_filename == file_info.fileName()){
+            table_widget->setCurrentItem(filename_item);
         }
         ++row_index;
     }
@@ -125,6 +145,57 @@ void Texm::append_file_info_recursive(const QFileInfo &file_info, const int dept
     }
 }
 
+
+void Texm::set_png_file(const QString &filename)
+{
+
+}
+
+void Texm::load_png_file()
+{
+
+}
+
+void Texm::set_current_preview_image(const QImage &image)
+{
+    ui->smallImagePreview->setImage(image);
+    ui->smallImagePreview->repaint();
+}
+
+void Texm::clear_small_preview()
+{
+    m_small_png_filename = QString();
+    m_small_png_image = QImage();
+    set_current_preview_image(QImage());
+}
+
+void Texm::clear_big_preview()
+{
+
+}
+
+void Texm::update_small_preview(const QString &filename)
+{
+    if(m_small_png_filename == filename){
+        return;
+    }
+    clear_small_preview();
+    m_small_png_filename = filename;
+    m_small_png_image = QImage(m_small_png_filename);
+
+    set_current_preview_image(m_small_png_image);
+
+    QString msg = QString("%1   %2x%3").arg(filename).arg(m_small_png_image.width()).arg(m_small_png_image.height());
+    ui->statusbar->showMessage(msg);
+
+}
+
+void Texm::update_big_preview(const QString &filename)
+{
+
+}
+
+
 //// Slots
 
 void Texm::menu_open_pushed()
@@ -144,10 +215,27 @@ void Texm::menu_open_pushed()
 
 void Texm::menu_exit_pushed()
 {
-
+    close();
 }
 
 void Texm::menu_publish_pushed()
 {
 
+}
+
+void Texm::table_widget_current_changed()
+{
+    // 点击即可预览该图片
+    QTableWidget * const table_widget = file_list_table_widget();
+    const int current_row = table_widget->currentRow();
+
+    if(current_row < 0 || m_selected_last_row == current_row){
+        return;
+    }
+//    qDebug() << current_row;
+    m_selected_last_row = current_row;
+    QFileInfo file_info = m_file_list.at(current_row);
+    const QString current_path = file_info.absoluteFilePath();
+
+    update_small_preview(current_path);
 }
