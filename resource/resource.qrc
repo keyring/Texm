@@ -1,0 +1,15 @@
+<RCC>
+    <qresource prefix="/background">
+        <file>black.png</file>
+        <file>checkerboard.png</file>
+        <file>white.png</file>
+    </qresource>
+    <qresource prefix="/icon">
+        <file>fileminus.png</file>
+        <file>fileplus.png</file>
+        <file>folder.png</file>
+        <file>gear.png</file>
+        <file>minus.png</file>
+        <file>plus.png</file>
+    </qresource>
+</RCC>
