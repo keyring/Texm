@@ -36,9 +36,12 @@ protected:
     void update_small_preview(const QString &filename);
     void update_big_preview(const QString &filename);
 
+
+
 private:
     Ui::Texm *ui;
     QFileInfoList m_file_list;
+    QFileInfoList m_file_list_sorted;
     int m_selected_last_row;
     QString m_small_png_filename;
     QImage m_small_png_image;

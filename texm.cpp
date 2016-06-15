@@ -2,6 +2,7 @@
 #include "ui_texm.h"
 
 #include <cmath>
+#include <QtAlgorithms>
 
 #include <QProcess>
 #include <QDebug>
@@ -24,9 +25,11 @@
 #include <QSettings>
 
 #include <QImageReader>
+#include <QPainter>
 #include <QMessageBox>
 
 #include "texm_util.h"
+#include "max_rects_pack.h"
 
 Texm::Texm(QWidget *parent) :
     QMainWindow(parent),
@@ -78,6 +81,7 @@ QTableWidget * Texm::file_list_table_widget()
 void Texm::file_list_clear()
 {
     m_file_list.clear();
+    m_file_list_sorted.clear();
     update_file_table();
 }
 
@@ -89,12 +93,51 @@ QString Texm::current_selected_filename()
     return name_item ? name_item->text() : QString();
 }
 
+static bool sort_file_list(const QFileInfo &a, const QFileInfo &b)
+{
+    return a.size() > b.size();
+}
+
 void Texm::update_big_pixmap()
 {
-    m_big_pixmap = QPixmap(2048, 2048);
-    foreach (const QFileInfo &file_info, m_file_list) {
+    /*
+        RectBestShortSideFit, ///< -BSSF: Positions the rectangle against the short side of a free rectangle into which it fits the best.
+        RectBestLongSideFit, ///< -BLSF: Positions the rectangle against the long side of a free rectangle into which it fits the best.
+        RectBestAreaFit, ///< -BAF: Positions the rectangle into the smallest free rect into which it fits.
+        RectBottomLeftRule, ///< -BL: Does the Tetris placement.
+        RectContactPointRule ///< -CP: Choosest the placement where the rectangle touches other rects as much as possible.
+    */
+    m_big_pixmap = QPixmap(1500, 512);
+    QPainter paint;
+    rbp::MaxRectsBinPack bin_pack;
+    rbp::MaxRectsBinPack::FreeRectChoiceHeuristic heuristic = rbp::MaxRectsBinPack::RectContactPointRule;
 
+    bin_pack.Init(1500, 512);
+
+    m_file_list_sorted = m_file_list;
+
+    qSort(m_file_list_sorted.begin(), m_file_list_sorted.end(), sort_file_list);
+
+    paint.begin(&m_big_pixmap);
+
+    // sort first is best
+    foreach (const QFileInfo &file_info, m_file_list_sorted) {
+        qDebug() << file_info.size();
+        const QString current_path = file_info.absoluteFilePath();
+        const QImage image = QImage(current_path);
+        const rbp::Rect packed_rect = bin_pack.Insert(image.width()+2, image.height()+2, heuristic);
+
+        if(packed_rect.height <= 0){
+            qDebug() << "Failed! Could not find a proper position to pack this rectangle into. Skipping this one. " << current_path ;
+            continue;
+        }
+
+        QRect target_rect = QRect(packed_rect.x+1, packed_rect.y+1, packed_rect.width-2, packed_rect.height-2);
+        paint.drawImage(target_rect, image);
     }
+    paint.end();
+
+    ui->bigImagePreview->setPixmap(m_big_pixmap);
 }
 
 void Texm::update_file_table()
@@ -124,6 +167,8 @@ void Texm::update_file_table()
 
     connect( table_widget, SIGNAL(currentCellChanged(int,int,int,int)), this, SLOT(table_widget_current_changed()) );
     table_widget_current_changed();
+
+    update_big_pixmap();
 }
 
 void Texm::append_file_info_list(const QList<QFileInfo> &info_list)
