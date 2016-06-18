@@ -149,6 +149,12 @@
       </item>
       <item>
        <widget class="QScrollArea" name="configScrollArea">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="maximumSize">
          <size>
           <width>300</width>
@@ -182,6 +188,86 @@
             <property name="title">
              <string>Output</string>
             </property>
+            <widget class="QLineEdit" name="lineEdit_output_data">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>50</y>
+               <width>245</width>
+               <height>20</height>
+              </rect>
+             </property>
+            </widget>
+            <widget class="QLabel" name="label">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>30</y>
+               <width>54</width>
+               <height>12</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>Data File:</string>
+             </property>
+            </widget>
+            <widget class="QLabel" name="label_2">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>80</y>
+               <width>81</width>
+               <height>16</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>Texture File</string>
+             </property>
+            </widget>
+            <widget class="QLineEdit" name="lineEdit_output_texture">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>100</y>
+               <width>245</width>
+               <height>20</height>
+              </rect>
+             </property>
+            </widget>
+            <widget class="QToolButton" name="toolButton_output_data">
+             <property name="geometry">
+              <rect>
+               <x>260</x>
+               <y>49</y>
+               <width>23</width>
+               <height>22</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>...</string>
+             </property>
+             <property name="icon">
+              <iconset resource="resource/resource.qrc">
+               <normaloff>:/icon/folder.png</normaloff>:/icon/folder.png</iconset>
+             </property>
+            </widget>
+            <widget class="QToolButton" name="toolButton_output_texture">
+             <property name="geometry">
+              <rect>
+               <x>260</x>
+               <y>99</y>
+               <width>23</width>
+               <height>22</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>...</string>
+             </property>
+             <property name="icon">
+              <iconset resource="resource/resource.qrc">
+               <normaloff>:/icon/folder.png</normaloff>:/icon/folder.png</iconset>
+             </property>
+            </widget>
            </widget>
           </item>
           <item>
@@ -261,6 +347,8 @@
    <header>basicimageview.h</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="resource/resource.qrc"/>
+ </resources>
  <connections/>
 </ui>

@@ -26,6 +26,7 @@
 
 #include <QImageReader>
 #include <QPainter>
+#include <QMatrix>
 #include <QMessageBox>
 
 #include "texm_util.h"
@@ -63,6 +64,10 @@ Texm::Texm(QWidget *parent) :
     connect(ui->actionOpen, SIGNAL(triggered()), this, SLOT(menu_open_pushed()));
     connect(ui->actionExit, SIGNAL(triggered()), this, SLOT(menu_exit_pushed()));
     connect(ui->actionPublish, SIGNAL(triggered()), this, SLOT(menu_publish_pushed()));
+    connect( ui->lineEdit_output_data, SIGNAL(textChanged(QString)), this, SLOT(output_data_directory_changed()) );
+    connect( ui->lineEdit_output_texture, SIGNAL(textChanged(QString)), this, SLOT(output_texture_directory_changed()) );
+    connect( ui->toolButton_output_data, SIGNAL(clicked()), this, SLOT(open_output_data_directory_pushed()) );
+    connect( ui->toolButton_output_texture, SIGNAL(clicked()), this, SLOT(open_output_data_directory_pushed()) );
 
     table_widget_current_changed();
 
@@ -107,12 +112,14 @@ void Texm::update_big_pixmap()
         RectBottomLeftRule, ///< -BL: Does the Tetris placement.
         RectContactPointRule ///< -CP: Choosest the placement where the rectangle touches other rects as much as possible.
     */
-    m_big_pixmap = QPixmap(1500, 512);
+    QMatrix matrix;
+    matrix.rotate(90.0);
+    m_big_pixmap = QPixmap(256, 512);
     QPainter paint;
     rbp::MaxRectsBinPack bin_pack;
     rbp::MaxRectsBinPack::FreeRectChoiceHeuristic heuristic = rbp::MaxRectsBinPack::RectContactPointRule;
 
-    bin_pack.Init(1500, 512);
+    bin_pack.Init(256, 512, true);
 
     m_file_list_sorted = m_file_list;
 
@@ -124,12 +131,16 @@ void Texm::update_big_pixmap()
     foreach (const QFileInfo &file_info, m_file_list_sorted) {
         qDebug() << file_info.size();
         const QString current_path = file_info.absoluteFilePath();
-        const QImage image = QImage(current_path);
+        QImage image = QImage(current_path);
         const rbp::Rect packed_rect = bin_pack.Insert(image.width()+2, image.height()+2, heuristic);
 
         if(packed_rect.height <= 0){
             qDebug() << "Failed! Could not find a proper position to pack this rectangle into. Skipping this one. " << current_path ;
             continue;
+        }
+
+        if(packed_rect.width != image.width()+2){
+            image = image.transformed(matrix, Qt::FastTransformation);
         }
 
         QRect target_rect = QRect(packed_rect.x+1, packed_rect.y+1, packed_rect.width-2, packed_rect.height-2);
@@ -197,17 +208,6 @@ void Texm::append_file_info_recursive(const QFileInfo &file_info, const int dept
     }
 }
 
-
-void Texm::set_png_file(const QString &filename)
-{
-
-}
-
-void Texm::load_png_file()
-{
-
-}
-
 void Texm::set_current_preview_image(const QImage &image)
 {
     ui->smallImagePreview->setImage(image);
@@ -223,7 +223,7 @@ void Texm::clear_small_preview()
 
 void Texm::clear_big_preview()
 {
-
+    ui->bigImagePreview->setImage(QImage());
 }
 
 void Texm::update_small_preview(const QString &filename)
@@ -242,11 +242,43 @@ void Texm::update_small_preview(const QString &filename)
 
 }
 
-void Texm::update_big_preview(const QString &filename)
-{
 
+QString Texm::open_output_directory_pushed(const QString &inputted_dir_path)
+{
+  const QString &current_dir =
+          inputted_dir_path.isEmpty() ? QString() : QDir( inputted_dir_path ).absolutePath();
+  const QString default_dir =
+      QFile::exists(current_dir) ? current_dir : QDir::homePath();
+
+  const QString path = QFileDialog::getSaveFileName(
+        this,
+        tr("Save"),
+        QString(),
+        tr("*.png") );
+
+    return path;
 }
 
+bool Texm::is_output_directory_valid(const QString &text)
+{
+    const QFileInfo output_directory(text);
+    return output_directory.isFile();
+}
+
+void Texm::output_direction_changed(QLineEdit *const line_edit)
+{
+    QString &text = line_edit->text();
+    QPalette palette = line_edit->palette();
+    if( text.isEmpty() || is_output_directory_valid(text))
+    {
+      palette.setBrush( QPalette::Text, QBrush() );
+    }
+    else
+    { // if output directory is invalid, change text color
+      palette.setBrush( QPalette::Text, QBrush(Qt::red) );
+    }
+    line_edit->setPalette( palette );
+}
 
 //// Slots
 
@@ -291,3 +323,28 @@ void Texm::table_widget_current_changed()
 
     update_small_preview(current_path);
 }
+
+void Texm::output_data_directory_changed()
+{
+    output_direction_changed(ui->lineEdit_output_data);
+
+}
+
+void Texm::output_texture_directory_changed()
+{
+    output_direction_changed(ui->lineEdit_output_texture);
+}
+
+void Texm::open_output_data_directory_pushed()
+{
+    const QString &output_dir_path = open_output_directory_pushed(ui->lineEdit_output_data->text());
+    ui->lineEdit_output_data->setText(output_dir_path);
+}
+
+void Texm::open_output_texture_directory_pushed()
+{
+    const QString &output_dir_path = open_output_directory_pushed(ui->lineEdit_output_texture->text());
+    ui->lineEdit_output_texture->setText(output_dir_path);
+}
+
+

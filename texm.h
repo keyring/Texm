@@ -28,15 +28,14 @@ public:
     void append_file_info_recursive(const QFileInfo &, const int);
 
 protected:
-    void set_png_file(const QString &filename);
-    void load_png_file();
     void set_current_preview_image(const QImage &image);
     void clear_small_preview();
     void clear_big_preview();
     void update_small_preview(const QString &filename);
-    void update_big_preview(const QString &filename);
 
-
+    QString open_output_directory_pushed(const QString &input_dir);
+    bool is_output_directory_valid(const QString &text);
+    void output_direction_changed(QLineEdit * const edit_line);
 
 private:
     Ui::Texm *ui;
@@ -54,6 +53,10 @@ private slots:
     void menu_exit_pushed();
     void menu_publish_pushed();
     void table_widget_current_changed();
+    void output_data_directory_changed();
+    void output_texture_directory_changed();
+    void open_output_data_directory_pushed();
+    void open_output_texture_directory_pushed();
 };
 
 #endif // TEXM_H
