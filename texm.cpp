@@ -67,7 +67,7 @@ Texm::Texm(QWidget *parent) :
     connect( ui->lineEdit_output_data, SIGNAL(textChanged(QString)), this, SLOT(output_data_directory_changed()) );
     connect( ui->lineEdit_output_texture, SIGNAL(textChanged(QString)), this, SLOT(output_texture_directory_changed()) );
     connect( ui->toolButton_output_data, SIGNAL(clicked()), this, SLOT(open_output_data_directory_pushed()) );
-    connect( ui->toolButton_output_texture, SIGNAL(clicked()), this, SLOT(open_output_data_directory_pushed()) );
+    connect( ui->toolButton_output_texture, SIGNAL(clicked()), this, SLOT(open_output_texture_directory_pushed()) );
 
     table_widget_current_changed();
 
@@ -254,7 +254,7 @@ QString Texm::open_output_directory_pushed(const QString &inputted_dir_path)
         this,
         tr("Save"),
         QString(),
-        tr("*.png") );
+        tr("*.") );
 
     return path;
 }
@@ -269,7 +269,7 @@ void Texm::output_direction_changed(QLineEdit *const line_edit)
 {
     QString &text = line_edit->text();
     QPalette palette = line_edit->palette();
-    if( text.isEmpty() || is_output_directory_valid(text))
+    if(!text.isEmpty() || is_output_directory_valid(text))
     {
       palette.setBrush( QPalette::Text, QBrush() );
     }
@@ -304,7 +304,10 @@ void Texm::menu_exit_pushed()
 
 void Texm::menu_publish_pushed()
 {
-
+    QString &filename = ui->lineEdit_output_texture->text();
+    if(filename.isEmpty())
+        return;
+    m_big_pixmap.save(filename, "png");
 }
 
 void Texm::table_widget_current_changed()
