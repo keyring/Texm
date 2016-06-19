@@ -115,6 +115,7 @@ void Texm::update_big_pixmap()
     QMatrix matrix;
     matrix.rotate(90.0);
     m_big_pixmap = QPixmap(256, 512);
+    m_big_pixmap.fill(Qt::transparent);
     QPainter paint;
     rbp::MaxRectsBinPack bin_pack;
     rbp::MaxRectsBinPack::FreeRectChoiceHeuristic heuristic = rbp::MaxRectsBinPack::RectContactPointRule;
@@ -307,6 +308,9 @@ void Texm::menu_publish_pushed()
     QString &filename = ui->lineEdit_output_texture->text();
     if(filename.isEmpty())
         return;
+    if(QFileInfo(filename).suffix() != ".png"){
+        filename += ".png";
+    }
     m_big_pixmap.save(filename, "png");
 }
 
@@ -341,13 +345,15 @@ void Texm::output_texture_directory_changed()
 void Texm::open_output_data_directory_pushed()
 {
     const QString &output_dir_path = open_output_directory_pushed(ui->lineEdit_output_data->text());
+
     ui->lineEdit_output_data->setText(output_dir_path);
 }
 
 void Texm::open_output_texture_directory_pushed()
 {
     const QString &output_dir_path = open_output_directory_pushed(ui->lineEdit_output_texture->text());
-    ui->lineEdit_output_texture->setText(output_dir_path);
+    QString temp = QDir(output_dir_path).absolutePath() + ".png";
+    ui->lineEdit_output_texture->setText(temp);
 }
 
 
