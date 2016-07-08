@@ -8,8 +8,6 @@
 
 #include "rect.h"
 
-namespace rbp {
-
 /*
 #include "clb/Algorithm/Sort.h"
 
@@ -49,4 +47,30 @@ bool IsContainedIn(const Rect &a, const Rect &b)
         && a.y+a.height <= b.y+b.height;
 }
 
+BinarySearch::BinarySearch(int min, int max, int fuzziness)
+{
+    this->min = min;
+    this->max = max;
+    this->fuzziness = fuzziness;
+}
+
+int BinarySearch::reset()
+{
+    low = min;
+    hign = max;
+    current = (low+hign) >> 1;
+    return current;
+}
+
+int BinarySearch::next(bool result)
+{
+    if(low >= hign) return -1;
+    if(result){
+        low = current + 1;
+    }else{
+        hign = current - 1;
+    }
+    current = (low+hign) >> 1;
+    if(std::abs(hign-low) < fuzziness) return -1;
+    return current;
 }

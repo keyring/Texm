@@ -20,7 +20,7 @@
 
 //using namespace std;
 
-namespace rbp {
+
 
 struct RectSize
 {
@@ -28,13 +28,33 @@ struct RectSize
     int height;
 };
 
-struct Rect
+struct Sprite
 {
-    int x;
-    int y;
-    int width;
-    int height;
+    int x, y, width, height;
+    std::string sprite_name;
 };
+
+typedef Sprite Rect;
+
+struct Page
+{
+    std::string page_name;
+    std::vector<Sprite> output_sprites, remaining_sprites;
+    float occupancy;
+    int width, height;
+
+};
+
+/// Specifies the different heuristic rules that can be used when deciding where to place a new rectangle.
+enum FreeRectChoiceHeuristic
+{
+    RectBestShortSideFit, ///< -BSSF: Positions the rectangle against the short side of a free rectangle into which it fits the best.
+    RectBestLongSideFit, ///< -BLSF: Positions the rectangle against the long side of a free rectangle into which it fits the best.
+    RectBestAreaFit, ///< -BAF: Positions the rectangle into the smallest free rect into which it fits.
+    RectBottomLeftRule, ///< -BL: Does the Tetris placement.
+    RectContactPointRule ///< -CP: Choosest the placement where the rectangle touches other rects as much as possible.
+};
+
 
 /// Performs a lexicographic compare on (rect short side, rect long side).
 /// @return -1 if the smaller side of a is shorter than the smaller side of b, 1 if the other way around.
@@ -93,7 +113,15 @@ public:
     }
 };
 
-}
+
+class BinarySearch{
+    int min, max, fuzziness, low, hign, current;
+
+public:
+    BinarySearch(int min, int max, int fuzziness);
+    int reset();
+    int next(bool result);
+};
 
 
 #endif // RECT_H

@@ -6,7 +6,10 @@
 #include <QProcess>
 #include <QFileInfo>
 
+#include "max_rects_pack.h"
+
 namespace Ui {
+
 class Texm;
 }
 
@@ -28,6 +31,9 @@ public:
     void append_file_info_recursive(const QFileInfo &, const int);
 
 protected:
+
+
+
     void set_current_preview_image(const QImage &image);
     void clear_small_preview();
     void clear_big_preview();
@@ -38,15 +44,23 @@ protected:
     void output_direction_changed(QLineEdit * const edit_line);
 
 private:
+    void update_input_sprites();
+    Page *pack_page(std::vector<Sprite> &input_sprites);
+    Page *pack_in_size(int width, int height, std::vector<Sprite> &inout_sprites);
+    Page *get_best(Page *, Page *);
+
+private:
     Ui::Texm *ui;
     QFileInfoList m_file_list;
-    QFileInfoList m_file_list_sorted;
+    std::vector<Sprite> m_input_sprites;
     int m_selected_last_row;
     QString m_small_png_filename;
     QImage m_small_png_image;
     QString m_big_png_filename;
     QImage m_big_png_image;
     QPixmap m_big_pixmap;
+
+    MaxRectsBinPack m_maxrect_bin;
 
 private slots:
     void menu_open_pushed();
@@ -57,6 +71,8 @@ private slots:
     void output_texture_directory_changed();
     void open_output_data_directory_pushed();
     void open_output_texture_directory_pushed();
+    void on_comboBox_width_currentTextChanged(const QString &arg1);
+    void on_comboBox_height_currentTextChanged(const QString &arg1);
 };
 
 #endif // TEXM_H

@@ -275,6 +275,64 @@
             <property name="title">
              <string>Option</string>
             </property>
+            <widget class="QLabel" name="label_3">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>30</y>
+               <width>16</width>
+               <height>16</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>W:</string>
+             </property>
+            </widget>
+            <widget class="QComboBox" name="comboBox_width">
+             <property name="geometry">
+              <rect>
+               <x>25</x>
+               <y>25</y>
+               <width>69</width>
+               <height>22</height>
+              </rect>
+             </property>
+             <property name="editable">
+              <bool>true</bool>
+             </property>
+             <property name="currentText">
+              <string>2048</string>
+             </property>
+            </widget>
+            <widget class="QLabel" name="label_4">
+             <property name="geometry">
+              <rect>
+               <x>120</x>
+               <y>30</y>
+               <width>16</width>
+               <height>16</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>H:</string>
+             </property>
+            </widget>
+            <widget class="QComboBox" name="comboBox_height">
+             <property name="geometry">
+              <rect>
+               <x>135</x>
+               <y>25</y>
+               <width>69</width>
+               <height>22</height>
+              </rect>
+             </property>
+             <property name="editable">
+              <bool>true</bool>
+             </property>
+             <property name="currentText">
+              <string>2048</string>
+             </property>
+            </widget>
            </widget>
           </item>
           <item>

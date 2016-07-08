@@ -15,7 +15,7 @@
 
 #include "rect.h"
 
-namespace rbp {
+
 
 /** MaxRectsBinPack implements the MAXRECTS data structure and different bin packing algorithms that
     use this structure. */
@@ -32,16 +32,6 @@ public:
     /// you need to restart with a new bin.
     void Init(int width, int height, bool rotate);
 
-    /// Specifies the different heuristic rules that can be used when deciding where to place a new rectangle.
-    enum FreeRectChoiceHeuristic
-    {
-        RectBestShortSideFit, ///< -BSSF: Positions the rectangle against the short side of a free rectangle into which it fits the best.
-        RectBestLongSideFit, ///< -BLSF: Positions the rectangle against the long side of a free rectangle into which it fits the best.
-        RectBestAreaFit, ///< -BAF: Positions the rectangle into the smallest free rect into which it fits.
-        RectBottomLeftRule, ///< -BL: Does the Tetris placement.
-        RectContactPointRule ///< -CP: Choosest the placement where the rectangle touches other rects as much as possible.
-    };
-
     /// Inserts the given list of rectangles in an offline/batch mode, possibly rotated.
     /// @param rects The list of rectangles to insert. This vector will be destroyed in the process.
     /// @param dst [out] This list will contain the packed rectangles. The indices will not correspond to that of rects.
@@ -49,10 +39,14 @@ public:
     void Insert(std::vector<RectSize> &rects, std::vector<Rect> &dst, FreeRectChoiceHeuristic method);
 
     /// Inserts a single rectangle into the bin, possibly rotated.
-    Rect Insert(int width, int height, FreeRectChoiceHeuristic method);
+    Rect Insert(Rect rect, FreeRectChoiceHeuristic method);
 
     /// Computes the ratio of used surface area to the total bin area.
     float Occupancy() const;
+
+    Page *Result() const;
+
+    Rect UsedRect() const;
 
 private:
     int binWidth;
@@ -87,7 +81,7 @@ private:
     void PruneFreeList();
 };
 
-}
+
 
 
 #endif // MAX_RECTS_PACK_H

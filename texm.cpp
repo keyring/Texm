@@ -30,7 +30,7 @@
 #include <QMessageBox>
 
 #include "texm_util.h"
-#include "max_rects_pack.h"
+
 
 Texm::Texm(QWidget *parent) :
     QMainWindow(parent),
@@ -60,6 +60,14 @@ Texm::Texm(QWidget *parent) :
       ui->bigImagePreview->setBackgroundBrush( QBrush( QPixmap(":background/checkerboard.png") ) );
     }
 
+    {
+        QRegExp rx("^[0-9]{1,10}$");//这个10就是最大长度
+        QValidator *validator = new QRegExpValidator(rx,0);
+
+        ui->comboBox_width->lineEdit()->setValidator(validator);
+        ui->comboBox_height->lineEdit()->setValidator(validator);
+    }
+
     ////
     connect(ui->actionOpen, SIGNAL(triggered()), this, SLOT(menu_open_pushed()));
     connect(ui->actionExit, SIGNAL(triggered()), this, SLOT(menu_exit_pushed()));
@@ -68,6 +76,9 @@ Texm::Texm(QWidget *parent) :
     connect( ui->lineEdit_output_texture, SIGNAL(textChanged(QString)), this, SLOT(output_texture_directory_changed()) );
     connect( ui->toolButton_output_data, SIGNAL(clicked()), this, SLOT(open_output_data_directory_pushed()) );
     connect( ui->toolButton_output_texture, SIGNAL(clicked()), this, SLOT(open_output_texture_directory_pushed()) );
+    connect(ui->comboBox_width, SIGNAL(currentTextChanged(QString)), this, SLOT(on_comboBox_width_currentTextChanged(QString)));
+    connect(ui->comboBox_height, SIGNAL(currentTextChanged(QString)), this, SLOT(on_comboBox_height_currentTextChanged(QString)));
+
 
     table_widget_current_changed();
 
@@ -86,7 +97,7 @@ QTableWidget * Texm::file_list_table_widget()
 void Texm::file_list_clear()
 {
     m_file_list.clear();
-    m_file_list_sorted.clear();
+    m_input_sprites.clear();
     update_file_table();
 }
 
@@ -98,58 +109,137 @@ QString Texm::current_selected_filename()
     return name_item ? name_item->text() : QString();
 }
 
-static bool sort_file_list(const QFileInfo &a, const QFileInfo &b)
-{
-    return a.size() > b.size();
-}
-
 void Texm::update_big_pixmap()
 {
-    /*
-        RectBestShortSideFit, ///< -BSSF: Positions the rectangle against the short side of a free rectangle into which it fits the best.
-        RectBestLongSideFit, ///< -BLSF: Positions the rectangle against the long side of a free rectangle into which it fits the best.
-        RectBestAreaFit, ///< -BAF: Positions the rectangle into the smallest free rect into which it fits.
-        RectBottomLeftRule, ///< -BL: Does the Tetris placement.
-        RectContactPointRule ///< -CP: Choosest the placement where the rectangle touches other rects as much as possible.
-    */
+    Page *packed_page = pack_page(m_input_sprites);
+
+    if(packed_page == NULL){
+        qDebug() << packed_page->width << packed_page->height;
+    }
     QMatrix matrix;
     matrix.rotate(90.0);
-    m_big_pixmap = QPixmap(256, 512);
+    m_big_pixmap = QPixmap(packed_page->width, packed_page->height);
     m_big_pixmap.fill(Qt::transparent);
     QPainter paint;
-    rbp::MaxRectsBinPack bin_pack;
-    rbp::MaxRectsBinPack::FreeRectChoiceHeuristic heuristic = rbp::MaxRectsBinPack::RectContactPointRule;
-
-    bin_pack.Init(256, 512, true);
-
-    m_file_list_sorted = m_file_list;
-
-    qSort(m_file_list_sorted.begin(), m_file_list_sorted.end(), sort_file_list);
 
     paint.begin(&m_big_pixmap);
 
-    // sort first is best
-    foreach (const QFileInfo &file_info, m_file_list_sorted) {
-        qDebug() << file_info.size();
-        const QString current_path = file_info.absoluteFilePath();
-        QImage image = QImage(current_path);
-        const rbp::Rect packed_rect = bin_pack.Insert(image.width()+2, image.height()+2, heuristic);
-
-        if(packed_rect.height <= 0){
-            qDebug() << "Failed! Could not find a proper position to pack this rectangle into. Skipping this one. " << current_path ;
+    foreach (const Sprite &sprite, packed_page->output_sprites) {
+        if(sprite.height <= 0){
+            qDebug() << "Failed! Could not find a proper position to pack this rectangle into. Skipping this one. " ;
             continue;
         }
-
-        if(packed_rect.width != image.width()+2){
+        const QString name = QString::fromStdString(sprite.sprite_name);
+        qDebug() << name  ;
+        QImage image = QImage(name);
+        if(image.width() != sprite.width){
             image = image.transformed(matrix, Qt::FastTransformation);
         }
 
-        QRect target_rect = QRect(packed_rect.x+1, packed_rect.y+1, packed_rect.width-2, packed_rect.height-2);
+        QRect target_rect = QRect(sprite.x, sprite.y, sprite.width, sprite.height);
         paint.drawImage(target_rect, image);
     }
+
     paint.end();
 
+
+    delete(packed_page);
+
     ui->bigImagePreview->setPixmap(m_big_pixmap);
+
+}
+
+void Texm::update_input_sprites()
+{
+    qSort(m_input_sprites.begin(), m_input_sprites.end(), [](Sprite &a, Sprite &b){
+        return a.width > b.width;
+    });    // sort first is best
+}
+
+Page *Texm::pack_page(std::vector<Sprite> &input_sprites)
+{
+    /* setting replace it */
+    int max_width = ui->comboBox_width->currentText().toInt();
+    int max_height = ui->comboBox_height->currentText().toInt();
+    bool rotate = true;
+
+    int min_width =INT_MAX,  min_height = INT_MAX;
+
+    foreach (const Sprite &sprite, input_sprites) {
+        int w = sprite.width;
+        int h = sprite.height;
+        if( rotate ? ((w>max_width || h>max_height) && (w>max_height || h>max_width) )
+                : (w>max_width || h>max_height) ){
+            qDebug() << "image does not fit max page size";
+            return NULL;  // image does not fit max page size
+        }
+
+        min_width = std::min(min_width, sprite.width);
+        min_height = std::min(min_height, sprite.height);
+    }
+
+    Page *best_result = NULL;
+
+    BinarySearch *width_search = new BinarySearch(min_width, max_width, 15);
+    BinarySearch *height_search = new BinarySearch(min_height, max_height, 15);
+    int width = max_width; // width_search->reset();
+    int height = max_height; // height_search->reset();
+    qDebug() << "image does not fit max page size"<< width << height;
+    int i = 0;
+    while(true){
+        Page *best_width_result = NULL;
+        while(width != -1){
+
+            Page *result = pack_in_size(width, height, input_sprites);
+            if(++i % 50 == 0) qDebug() << "#";
+            best_width_result = get_best(best_width_result, result);
+            width = width_search->next(result==NULL);
+
+        }
+        best_result = get_best(best_result, best_width_result);
+        height = height_search->next(best_width_result==NULL);
+        if(height == -1) break;
+        width = width_search->reset();
+    }
+
+    delete(width_search);
+    delete(height_search);
+
+    return best_result;
+
+}
+
+Page *Texm::pack_in_size(int width, int height, std::vector<Sprite> &inout_sprites)
+{
+    Page *best_result= NULL;
+    for(int i = 0; i < 5; ++i ){
+        m_maxrect_bin.Init(width, height, true);
+        Page *result = NULL;
+        foreach (const Sprite &sprite, inout_sprites) {
+            m_maxrect_bin.Insert(sprite, FreeRectChoiceHeuristic(i));
+        }
+        result = m_maxrect_bin.Result();
+
+        if(result->output_sprites.size() == 0) continue;
+        best_result = get_best(best_result, result);
+        qDebug() << best_result->width << best_result->height ;
+    }
+
+    return best_result;
+}
+
+Page *Texm::get_best(Page *result1, Page *result2)
+{
+    if(result1 == NULL) return result2;
+    if(result2 == NULL) return result1;
+    if(result1->occupancy > result2->occupancy){
+        delete(result2);
+        return result1;
+    }else{
+        delete(result1);
+        return result2;
+    }
+
 }
 
 void Texm::update_file_table()
@@ -179,7 +269,6 @@ void Texm::update_file_table()
 
     connect( table_widget, SIGNAL(currentCellChanged(int,int,int,int)), this, SLOT(table_widget_current_changed()) );
     table_widget_current_changed();
-
     update_big_pixmap();
 }
 
@@ -189,6 +278,7 @@ void Texm::append_file_info_list(const QList<QFileInfo> &info_list)
         append_file_info_recursive(info, 0);
     }
 
+    update_input_sprites();
     update_file_table();
 }
 
@@ -200,6 +290,15 @@ void Texm::append_file_info_recursive(const QFileInfo &file_info, const int dept
         const bool is_png = TexmUtil::has_png_extension(file_info);
         if(is_png && !m_file_list.contains(file_info)){
             m_file_list.push_back(file_info);
+            const QString current_path = file_info.absoluteFilePath();
+            QImage image = QImage(current_path);
+            Sprite sprite;
+            sprite.sprite_name = current_path.toStdString();
+            sprite.x = 0;
+            sprite.y = 0;
+            sprite.width = image.width();
+            sprite.height = image.height();
+            m_input_sprites.push_back(sprite);
         }
     }else if(file_info.isDir()){
         const QDir dir(file_info.absoluteFilePath());
@@ -357,3 +456,13 @@ void Texm::open_output_texture_directory_pushed()
 }
 
 
+
+void Texm::on_comboBox_width_currentTextChanged(const QString &arg1)
+{
+   // update_big_pixmap();
+}
+
+void Texm::on_comboBox_height_currentTextChanged(const QString &arg1)
+{
+    //update_big_pixmap();
+}

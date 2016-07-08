@@ -13,12 +13,9 @@
 #include <cassert>
 #include <cstring>
 #include <cmath>
+#include <algorithm>
 
 #include "max_rects_pack.h"
-
-namespace rbp {
-
-using namespace std;
 
 MaxRectsBinPack::MaxRectsBinPack()
 :binWidth(0),
@@ -50,9 +47,11 @@ void MaxRectsBinPack::Init(int width, int height, bool rotate)
     freeRectangles.push_back(n);
 }
 
-Rect MaxRectsBinPack::Insert(int width, int height, FreeRectChoiceHeuristic method)
+Rect MaxRectsBinPack::Insert(Rect rect, FreeRectChoiceHeuristic method)
 {
     Rect newNode;
+    int width = rect.width;
+    int height = rect.height;
     // Unused in this function. We don't need to know the score after finding the position.
     int score1 = std::numeric_limits<int>::max();
     int score2 = std::numeric_limits<int>::max();
@@ -65,6 +64,7 @@ Rect MaxRectsBinPack::Insert(int width, int height, FreeRectChoiceHeuristic meth
         case RectBestAreaFit: newNode = FindPositionForNewNodeBestAreaFit(width, height, score1, score2); break;
     }
 
+    newNode.sprite_name = rect.sprite_name;
     if (newNode.height == 0)
         return newNode;
 
@@ -172,6 +172,37 @@ float MaxRectsBinPack::Occupancy() const
         usedSurfaceArea += usedRectangles[i].width * usedRectangles[i].height;
 
     return (float)usedSurfaceArea / (binWidth * binHeight);
+}
+
+/// get used surface rect.
+Rect MaxRectsBinPack::UsedRect() const
+{
+    Rect usedSurfaceRect = {0,0,0,0};
+    for(size_t i = 0; i < usedRectangles.size(); ++i){
+        usedSurfaceRect.width += usedRectangles[i].width;
+        usedSurfaceRect.height += usedRectangles[i].height;
+    }
+
+    return usedSurfaceRect;
+}
+
+Page *MaxRectsBinPack::Result() const
+{
+    int w = 0, h = 0;
+
+    for(size_t i = 0; i < usedRectangles.size(); ++i){
+        w = std::max(w, usedRectangles[i].x + usedRectangles[i].width);
+        h = std::max(h, usedRectangles[i].y + usedRectangles[i].height);
+    }
+
+    Page *result = new Page();
+    result->output_sprites = usedRectangles;
+    result->occupancy = Occupancy();
+    result->width = w;
+    result->height = h;
+
+    return result;
+
 }
 
 Rect MaxRectsBinPack::FindPositionForNewNodeBottomLeft(int width, int height, int &bestY, int &bestX) const
@@ -522,4 +553,4 @@ void MaxRectsBinPack::PruneFreeList()
         }
 }
 
-}
+
