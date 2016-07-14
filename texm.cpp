@@ -173,17 +173,17 @@ Page *Texm::pack_page(std::vector<Sprite> &input_sprites)
             qDebug() << "image does not fit max page size";
             return NULL;  // image does not fit max page size
         }
-
-        min_width = std::min(min_width, sprite.width);
-        min_height = std::min(min_height, sprite.height);
+        min_width = std::min(min_width, w);
+        min_height = std::min(min_height, h);
     }
+
 
     Page *best_result = NULL;
 
     BinarySearch *width_search = new BinarySearch(min_width, max_width, 15);
     BinarySearch *height_search = new BinarySearch(min_height, max_height, 15);
-    int width = max_width; // width_search->reset();
-    int height = max_height; // height_search->reset();
+    int width = width_search->reset();
+    int height = height_search->reset();
     qDebug() << "image does not fit max page size"<< width << height;
     int i = 0;
     while(true){
@@ -212,14 +212,22 @@ Page *Texm::pack_page(std::vector<Sprite> &input_sprites)
 Page *Texm::pack_in_size(int width, int height, std::vector<Sprite> &inout_sprites)
 {
     Page *best_result= NULL;
+    std::vector<Sprite> unused;
     for(int i = 0; i < 5; ++i ){
         m_maxrect_bin.Init(width, height, true);
         Page *result = NULL;
+
         foreach (const Sprite &sprite, inout_sprites) {
-            m_maxrect_bin.Insert(sprite, FreeRectChoiceHeuristic(i));
+            Sprite s = m_maxrect_bin.Insert(sprite, FreeRectChoiceHeuristic(i));
+            if(s.height == 0){
+                unused.push_back(s);
+            }
         }
         result = m_maxrect_bin.Result();
-
+        if(unused.size() > 0){
+            unused.clear();
+            continue;
+        }
         if(result->output_sprites.size() == 0) continue;
         best_result = get_best(best_result, result);
         qDebug() << best_result->width << best_result->height ;
