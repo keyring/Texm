@@ -39,7 +39,7 @@ protected:
     void clear_big_preview();
     void update_small_preview(const QString &filename);
 
-    QString open_output_directory_pushed(const QString &input_dir);
+    QString open_output_directory_pushed(const QString &input_dir, const char *option);
     bool is_output_directory_valid(const QString &text);
     void output_direction_changed(QLineEdit * const edit_line);
 
@@ -48,6 +48,8 @@ private:
     Page *pack_page(std::vector<Sprite> &input_sprites);
     Page *pack_in_size(int width, int height, std::vector<Sprite> &inout_sprites);
     Page *get_best(Page *, Page *);
+    void write_data_file(const QString &data_file, const QString &texture_file);
+    void write_texture_file(const QString &filename);
 
 private:
     Ui::Texm *ui;
@@ -59,6 +61,7 @@ private:
     QString m_big_png_filename;
     QImage m_big_png_image;
     QPixmap m_big_pixmap;
+    Page *m_packed_page;
 
     MaxRectsBinPack m_maxrect_bin;
 

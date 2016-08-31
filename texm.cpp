@@ -35,7 +35,8 @@
 Texm::Texm(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::Texm),
-    m_selected_last_row(-1)
+    m_selected_last_row(-1),
+    m_packed_page(nullptr)
 {
     ui->setupUi(this);
 
@@ -116,6 +117,7 @@ void Texm::update_big_pixmap()
     if(packed_page == NULL){
         qDebug() << packed_page->width << packed_page->height;
     }
+
     QMatrix matrix;
     matrix.rotate(90.0);
     m_big_pixmap = QPixmap(packed_page->width, packed_page->height);
@@ -142,10 +144,12 @@ void Texm::update_big_pixmap()
 
     paint.end();
 
-
-    delete(packed_page);
-
     ui->bigImagePreview->setPixmap(m_big_pixmap);
+
+    if (m_packed_page != nullptr)
+        delete(m_packed_page);
+
+     m_packed_page = packed_page;
 
 }
 
@@ -351,7 +355,7 @@ void Texm::update_small_preview(const QString &filename)
 }
 
 
-QString Texm::open_output_directory_pushed(const QString &inputted_dir_path)
+QString Texm::open_output_directory_pushed(const QString &inputted_dir_path, const char *option)
 {
   const QString &current_dir =
           inputted_dir_path.isEmpty() ? QString() : QDir( inputted_dir_path ).absolutePath();
@@ -361,8 +365,8 @@ QString Texm::open_output_directory_pushed(const QString &inputted_dir_path)
   const QString path = QFileDialog::getSaveFileName(
         this,
         tr("Save"),
-        QString(),
-        tr("*.") );
+        default_dir,
+        tr(option));
 
     return path;
 }
@@ -379,13 +383,55 @@ void Texm::output_direction_changed(QLineEdit *const line_edit)
     QPalette palette = line_edit->palette();
     if(!text.isEmpty() || is_output_directory_valid(text))
     {
-      palette.setBrush( QPalette::Text, QBrush() );
+        palette.setBrush( QPalette::Text, QBrush() );
     }
     else
     { // if output directory is invalid, change text color
-      palette.setBrush( QPalette::Text, QBrush(Qt::red) );
+        palette.setBrush( QPalette::Text, QBrush(Qt::red) );
     }
     line_edit->setPalette( palette );
+}
+
+void Texm::write_data_file(const QString &data_file_name, const QString &texture_file_name)
+{
+    QFile f(data_file_name);
+    if(!f.open((QIODevice::WriteOnly | QIODevice::Text))){
+        return;
+    }
+
+    QString table_name = QFileInfo(data_file_name).baseName().append("_map");
+    QString texture_name = QFileInfo(texture_file_name).fileName();
+
+    QTextStream data_out(&f);
+
+    data_out << "-- created with Texm" << endl;
+    data_out << "local path = \"" << texture_name <<"\"" << endl;
+    data_out << table_name << " = {" << endl << endl;
+
+    foreach (const Sprite &sprite, m_packed_page->output_sprites) {
+        if(sprite.height <= 0){
+            qDebug() << "Failed! Could not find a proper position to pack this rectangle into. Skipping this one. " ;
+            continue;
+        }
+        const QString name = QFileInfo(QString::fromStdString(sprite.sprite_name)).fileName();
+        qDebug() << name  ;
+
+        data_out << "\t[\"" << name << "\"] = {" << endl;
+        data_out << "\t\tfile = path," << endl;
+        data_out << "\t\tx=" << sprite.x << ",y=" << sprite.y << "," << endl;
+        data_out << "\t\twidth=" << sprite.width << ",height=" << sprite.height << endl << "\t}," << endl;
+
+    }
+
+    data_out << "}" << endl;
+
+    f.close();
+
+}
+
+void Texm::write_texture_file(const QString &filename)
+{
+    m_big_pixmap.save(filename, "png");
 }
 
 //// Slots
@@ -412,13 +458,21 @@ void Texm::menu_exit_pushed()
 
 void Texm::menu_publish_pushed()
 {
-    QString &filename = ui->lineEdit_output_texture->text();
-    if(filename.isEmpty())
+    QString &texture_file_name = ui->lineEdit_output_texture->text();
+    if(texture_file_name.isEmpty())
         return;
-    if(QFileInfo(filename).suffix() != ".png"){
-        filename += ".png";
+    if(QFileInfo(texture_file_name).suffix().isEmpty()){
+        texture_file_name.append(".png");
     }
-    m_big_pixmap.save(filename, "png");
+    write_texture_file(texture_file_name);
+
+    QString &data_file_name = ui->lineEdit_output_data->text();
+    if(data_file_name.isEmpty())
+        return;
+    if(QFileInfo(data_file_name).suffix().isEmpty()){
+        data_file_name.append(".lua");
+    }
+    write_data_file(data_file_name, texture_file_name);
 }
 
 void Texm::table_widget_current_changed()
@@ -451,16 +505,27 @@ void Texm::output_texture_directory_changed()
 
 void Texm::open_output_data_directory_pushed()
 {
-    const QString &output_dir_path = open_output_directory_pushed(ui->lineEdit_output_data->text());
+    QString &output_dir_path = open_output_directory_pushed(ui->lineEdit_output_data->text(), "*.lua");
+    if(output_dir_path.isEmpty()){
+        return;
+    }
+    if(QFileInfo(output_dir_path).suffix().isEmpty()){
+        output_dir_path.append(".lua");
+    }
 
     ui->lineEdit_output_data->setText(output_dir_path);
 }
 
 void Texm::open_output_texture_directory_pushed()
 {
-    const QString &output_dir_path = open_output_directory_pushed(ui->lineEdit_output_texture->text());
-    QString temp = QDir(output_dir_path).absolutePath() + ".png";
-    ui->lineEdit_output_texture->setText(temp);
+    QString &output_dir_path = open_output_directory_pushed(ui->lineEdit_output_texture->text(), "*.png");
+    if(output_dir_path.isEmpty()){
+        return;
+    }
+    if(QFileInfo(output_dir_path).suffix().isEmpty()){
+        output_dir_path.append(".png");
+    }
+    ui->lineEdit_output_texture->setText(output_dir_path);
 }
 
 
