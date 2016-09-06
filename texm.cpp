@@ -509,11 +509,13 @@ void Texm::open_output_data_directory_pushed()
     if(output_dir_path.isEmpty()){
         return;
     }
+
     if(QFileInfo(output_dir_path).suffix().isEmpty()){
         output_dir_path.append(".lua");
     }
 
     ui->lineEdit_output_data->setText(output_dir_path);
+    ui->lineEdit_output_texture->setText(QFileInfo(output_dir_path).absolutePath() + "/" + QFileInfo(output_dir_path).baseName() + ".png");
 }
 
 void Texm::open_output_texture_directory_pushed()
