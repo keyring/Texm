@@ -36,6 +36,7 @@ Texm::Texm(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::Texm),
     m_selected_last_row(-1),
+    m_is_busy( false ),
     m_packed_page(nullptr)
 {
     ui->setupUi(this);
@@ -56,7 +57,7 @@ Texm::Texm(QWidget *parent) :
 
     { // init big image view
       QPalette p = ui->bigImagePreview->palette();
-      p.setBrush( QPalette::Base, QBrush(QColor(50,50,50)) );
+      p.setBrush( QPalette::Base, QBrush(QColor("white")) );
       ui->bigImagePreview->setPalette( p );
       ui->bigImagePreview->setBackgroundBrush( QBrush( QPixmap(":background/checkerboard.png") ) );
     }
@@ -286,12 +287,17 @@ void Texm::update_file_table()
 
 void Texm::append_file_info_list(const QList<QFileInfo> &info_list)
 {
+    if(is_busy()){
+        return;
+    }
+    set_busy_mode( true );
     foreach (const QFileInfo &info, info_list) {
         append_file_info_recursive(info, 0);
     }
 
     update_input_sprites();
     update_file_table();
+    set_busy_mode( false );
 }
 
 void Texm::append_file_info_recursive(const QFileInfo &file_info, const int depth)
@@ -319,6 +325,86 @@ void Texm::append_file_info_recursive(const QFileInfo &file_info, const int dept
         }
     }
 }
+
+void Texm::set_busy_mode( const bool b)
+{
+    m_is_busy = b;
+}
+
+bool Texm::is_busy() const
+{
+    return m_is_busy;
+}
+
+
+//////////////////////
+// protected functions
+//////////////////////
+
+void Texm::dragEnterEvent( QDragEnterEvent *event )
+{
+  if( is_busy() )
+  {
+    return;
+  }
+
+  if( event->mimeData()->hasUrls() )
+  {
+    event->accept();
+  }
+}
+
+void Texm::dragLeaveEvent( QDragLeaveEvent *event )
+{
+  Q_UNUSED(event)
+  if( is_busy() )
+  {
+    return;
+  }
+}
+
+
+void Texm::dragMoveEvent( QDragMoveEvent * event )
+{
+  Q_UNUSED(event)
+  if( is_busy() )
+  {
+    return;
+  }
+
+}
+
+void Texm::dropEvent( QDropEvent *event )
+{
+  if( is_busy() )
+  {
+    return;
+  }
+
+
+  QWidget * const central_widget = ui->centralwidget;
+  const bool mouse_is_on_image_view = TexmUtil::is_under_mouse( central_widget );
+
+  const QMimeData * const mimedata = event->mimeData();
+  if( ! mimedata->hasUrls() )
+  {
+    return;
+  }
+
+  const QList<QUrl> &url_list = mimedata->urls();
+
+  if( mouse_is_on_image_view )
+  { // append png files
+    QList<QFileInfo> file_list;
+    foreach( const QUrl &url, url_list )
+    {
+      file_list.push_back( QFileInfo( url.toLocalFile() ) );
+    }
+    append_file_info_list( file_list );
+  }
+}
+
+
 
 void Texm::set_current_preview_image(const QImage &image)
 {

@@ -29,10 +29,15 @@ public:
     void update_big_pixmap();
     void append_file_info_list(const QList<QFileInfo> &info_list);
     void append_file_info_recursive(const QFileInfo &, const int);
+    void set_busy_mode( const bool b);
+    bool is_busy() const;
 
 protected:
 
-
+    virtual void dragEnterEvent( QDragEnterEvent *event );
+    virtual void dragLeaveEvent( QDragLeaveEvent *event );
+    virtual void dragMoveEvent( QDragMoveEvent *event );
+    virtual void dropEvent( QDropEvent *event );
 
     void set_current_preview_image(const QImage &image);
     void clear_small_preview();
@@ -62,6 +67,7 @@ private:
     QImage m_big_png_image;
     QPixmap m_big_pixmap;
     Page *m_packed_page;
+    bool m_is_busy;
 
     MaxRectsBinPack m_maxrect_bin;
 

@@ -31,7 +31,34 @@ inline QString size_to_string_mb( const qint64 size ){
       .arg( static_cast<double>(size) / ( 1024 * 1024 ), 0, 'f', 2 );
 }
 
+inline bool is_under_mouse( const QWidget * const widget )
+{
+  return QRect( QPoint(), widget->size() ).contains( widget->mapFromGlobal( QCursor::pos() ) );
+}
 
+inline void set_drop_here_stylesheet(
+    QWidget * const widget,
+    const bool drag_hoverring,
+    const QColor &hoverring_color = QColor("lightskyblue") )
+{
+//  widget->setStyleSheet();
+  QString stylesheet =
+      "QWidget{"
+      "background-image : url(:/background/drop_here.png);"
+      "background-position: center ;"
+      "background-repeat : repeat-none;";
+  if( drag_hoverring )
+  {
+    stylesheet += "background-color : " + hoverring_color.name() + ";\n";
+  }
+  else
+  {
+    stylesheet += "background-color : " + QColor("white").name() + ";\n";
+  }
+  stylesheet += "}";
+
+  widget->setStyleSheet( stylesheet );
+}
 
 }
 

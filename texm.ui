@@ -16,6 +16,9 @@
     <height>450</height>
    </size>
   </property>
+  <property name="acceptDrops">
+   <bool>true</bool>
+  </property>
   <property name="windowTitle">
    <string>Texm</string>
   </property>
@@ -98,6 +101,9 @@
               <height>300</height>
              </size>
             </property>
+            <property name="acceptDrops">
+             <bool>false</bool>
+            </property>
            </widget>
           </item>
          </layout>
@@ -141,7 +147,11 @@
            <number>6</number>
           </property>
           <item row="0" column="0">
-           <widget class="BasicImageView" name="bigImagePreview"/>
+           <widget class="BasicImageView" name="bigImagePreview">
+            <property name="acceptDrops">
+             <bool>false</bool>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
